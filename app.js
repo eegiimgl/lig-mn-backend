@@ -4,6 +4,7 @@ const socketIo = require("socket.io");
 const cors = require("cors");
 const routerMatches = require("./routes/matches");
 const { LiveMatches } = require("./services/live_match");
+const { MatchesRepository } = require("./repositories/matches.repository");
 
 const port = 4001;
 const app = express();
@@ -15,17 +16,18 @@ const server = http.createServer(app);
 
 const io = socketIo(server, { cors: { origin: "*" } });
 
-let matches = new LiveMatches();
+const matchesRepository = new MatchesRepository();
+let matches = new LiveMatches(matchesRepository);
 
 io.on("connection", (socket) => {
-  console.log("New client connected");
+  console.log(`New client connected with id: ${socket.client.id}`);
 
   socket.on("disconnect", () => {
-    console.log("Client disconnected");
+    console.log(`Client disconnected with id: ${socket.client.id}`);
   });
 
   socket.on("matchEvent", (data) => {
-    console.dir(`Match Event: ${data.action} with ID: ${data.matchId}`);
+    console.log(`Match Event: ${data.action} with ID: ${data.matchId}`);
 
     if (data.action === "create") {
       matches.add({

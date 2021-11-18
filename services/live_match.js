@@ -5,9 +5,10 @@ const MatchState = {
 };
 
 class LiveMatches {
-  constructor() {
+  constructor(matchesRepository) {
     this.liveMatches = [];
     this.interval = null;
+    this.matchesRepository = matchesRepository;
   }
 
   add(match) {
@@ -17,6 +18,8 @@ class LiveMatches {
       match.wrestler2Score = 0;
       this.liveMatches.push(match);
     }
+
+    this.matchesRepository.startMatch(match.matchId);
   }
 
   existById(matchId) {
@@ -26,15 +29,18 @@ class LiveMatches {
   startTimer(matchId) {
     let match = this.liveMatches.find((x) => x.matchId === matchId);
     match.state = MatchState.RUNNING;
+    this.updateMatch(match);
   }
 
   pauseTimer(matchId) {
     let match = this.liveMatches.find((x) => x.matchId === matchId);
     match.state = MatchState.STOPPED;
+    this.updateMatch(match);
   }
 
   remove(matchId) {
     this.liveMatches = this.liveMatches.filter((x) => x.matchId !== matchId);
+    this.matchesRepository.finishMatch(matchId);
   }
 
   incrementPoint(matchId, wrestlerNo) {
@@ -44,6 +50,8 @@ class LiveMatches {
     } else {
       match.wrestler2Score++;
     }
+
+    this.updateMatch(match);
   }
 
   decrementPoint(matchId, wrestlerNo) {
@@ -53,6 +61,8 @@ class LiveMatches {
     } else if (wrestlerNo == 2 && match.wrestler1Score > 0) {
       match.wrestler2Score--;
     }
+
+    this.updateMatch(match);
   }
 
   runTimer(io) {
@@ -88,6 +98,15 @@ class LiveMatches {
     });
 
     io.emit("liveMatchesBroadcastingEvent", matchInfo);
+  }
+
+  updateMatch(match) {
+    this.matchesRepository.updateMatch(
+      match.matchId,
+      match.wrestler1Score,
+      match.wrestler2Score,
+      match.remainingSeconds
+    );
   }
 
   convertTimer(remainingSeconds) {

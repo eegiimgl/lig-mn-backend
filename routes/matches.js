@@ -13,6 +13,17 @@ const db = mysql.createPool({
 router.use(express.json());
 router.use(cors());
 
+router.get("/api/matches", (req, res) => {
+  const sqlSelect = "SELECT * FROM matches";
+  db.query(sqlSelect, (err, result) => {
+    if (err) {
+      console.log(err);
+    } else {
+      res.send(result);
+    }
+  });
+});
+
 router.get("/api/matches/:id", (req, res) => {
   const matchId = req.params.id;
   const sqlSelect = "SELECT * FROM matches WHERE opaque_id = ?";
