@@ -3,6 +3,7 @@ const http = require("http");
 const socketIo = require("socket.io");
 const cors = require("cors");
 const routerMatches = require("./routes/matches");
+const routerWrestlers = require("./routes/wrestlers");
 const { LiveMatches } = require("./services/live_match");
 const { MatchesRepository } = require("./repositories/matches.repository");
 
@@ -10,6 +11,7 @@ const port = 4001;
 const app = express();
 
 app.use(routerMatches);
+app.use(routerWrestlers);
 app.use(cors);
 
 const server = http.createServer(app);
@@ -39,7 +41,7 @@ io.on("connection", (socket) => {
     } else if (data.action == "pause") {
       matches.pauseTimer(data.matchId);
     } else if (data.action == "finish") {
-      matches.remove(data.matchId);
+      matches.finish(data.matchId, data.winnerNo);
     } else if (data.action == "pointIncrement") {
       matches.incrementPoint(data.matchId, data.wrestlerNo);
     } else if (data.action == "pointDecrement") {

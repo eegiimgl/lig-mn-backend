@@ -38,9 +38,9 @@ class LiveMatches {
     this.updateMatch(match);
   }
 
-  remove(matchId) {
+  finish(matchId, winnerNo) {
     this.liveMatches = this.liveMatches.filter((x) => x.matchId !== matchId);
-    this.matchesRepository.finishMatch(matchId);
+    this.matchesRepository.finishMatch(matchId, winnerNo);
   }
 
   incrementPoint(matchId, wrestlerNo) {
@@ -88,16 +88,20 @@ class LiveMatches {
       }
     }
 
-    const matchInfo = this.liveMatches.map((x) => {
-      return {
+    const eventBaseName = "liveMatchesBroadcastingEvent";
+    const matchInfos = this.liveMatches.map((x) => {
+      const matchObj = {
         matchId: x.matchId,
         timer: this.convertTimer(x.remainingSeconds),
         wrestler1Score: x.wrestler1Score,
         wrestler2Score: x.wrestler2Score,
       };
+
+      io.emit(eventBaseName + `-${x.matchId}`, matchObj);
+      return matchObj;
     });
 
-    io.emit("liveMatchesBroadcastingEvent", matchInfo);
+    io.emit(eventBaseName, matchInfos);
   }
 
   updateMatch(match) {
